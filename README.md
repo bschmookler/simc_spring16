@@ -49,3 +49,9 @@ Documentation
 
 For more information, see the [SIMC Monte Carlo page in the Hall C
 Wiki](https://hallcweb.jlab.org/wiki/index.php/SIMC_Monte_Carlo)
+
+Changes by the GMp Group
+------------------------
+
+See the [GMp SIMC page](https://hallaweb.jlab.org/wiki/index.php/Simulation_using_SIMC)
+

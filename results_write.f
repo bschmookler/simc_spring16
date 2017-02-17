@@ -4,6 +4,7 @@
 	include 'radc.inc'
 	include 'hbook.inc'
 	include 'simulate.inc'
+	include 'g_dump_all_events.inc'
 
 	real*4	ntu(80)
 	type(event_main):: main
@@ -22,12 +23,19 @@
 
 	logical success
 
+!local reconstructed energy loss calculations:
+	real*8 Eloss_Ein, Eloss_Eout, Eloss_Had
+	real*8 HadP_spec,HadE_spec
+
 	if (debug(2)) write(6,*)'r_ntu_write: entering'
 
 !If event did not make it thru spectrometers, return.  Later, we will want to
 ! add option to write event even if it failed when doing_phsp.
 
-	if (.not.success) return
+	if (.not.success .and. .not.dump_all_this_ev) return
+
+	good_evt = 0
+	if(success) good_evt = 1
 
 *	if (phot1.gt.lim1) write(6,*) 'phot1,lim1=',phot1,lim1
 *	if (phot2.gt.lim2) then
@@ -58,6 +66,15 @@
      >		/ sqrt(recon%uq%y**2+recon%uq%z**2)
 	  Pm_Heepx =  -recon%Pmx
 	endif
+
+!Calculate reconstructed energy losses:
+	Eloss_Ein = Ebeam - recon%Ein
+	Eloss_Eout = recon%e%E - ( spec%e%p*(1.+recon%e%delta/100.)  )
+	
+	HadP_spec = spec%p%P*(1.+recon%p%delta/100.)
+        HadE_spec = sqrt(HadP_spec**2 + Mh2)
+	Eloss_Had = recon%p%E - HadE_spec 
+
 
 	if(electron_arm.eq.1 .or. electron_arm.eq.3.or. electron_arm.eq.7)then !electron = right side.
 	  ntu(1) = recon%e%delta
@@ -221,9 +238,27 @@ c	  ntu(11) = vertex%p%xptar			!mr
 	  ntu(39) = recon%PmPer/1000.
 	  ntu(40) = recon%PmOop/1000.
 	  ntu(41) = -main%target%rastery		!fry - cm
-	  ntu(42) = ntup%radphot/1000.			!radphot - GeV
-	  ntu(43) = main%sigcc
-	  ntu(44) = main%weight
+	  ntu(42) = -main%target%rasterx                !frx - cm
+	  ntu(43) = ntup%radphot/1000.			!radphot - GeV
+	  ntu(44) = main%sigcc
+	  ntu(45) = main%weight
+	  ntu(46) = good_evt
+	  ntu(47) = stop_where
+	  ntu(48) = x_stop
+	  ntu(49) = y_stop
+	  ntu(50) = main%target%Eloss(1)
+	  ntu(51) = main%target%Eloss(2)
+	  ntu(52) = main%target%Eloss(3)
+	  ntu(53) = Eloss_Ein
+	  ntu(54) = Eloss_Eout
+	  ntu(55) = Eloss_Had
+	  ntu(56) = main%target%z
+	  ntu(57) = ezreact
+	  ntu(58) = pzreact
+	  ntu(59) = main%SP%e%z
+	  ntu(60) = main%SP%p%z
+	  ntu(61) = main%SP%e%delta
+	  ntu(62) = main%SP%p%delta
 	endif
 
 	call HFN(NtupleID,ntu)

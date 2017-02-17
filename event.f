@@ -1004,6 +1004,10 @@ C DJG stinkin' Jacobian!
 	real*8 W2
 	real*8 oop_x,oop_y
 	real*8 mm,mmA,mm2,mmA2,t
+	real*8 vert_Ein_loss,rEin,Evloss_Ein
+
+	real*8 zero
+        parameter (zero=0.0d0)  !double precision zero for subroutines calls.
 
 	logical success
 	type(event)::	recon
@@ -1021,7 +1025,27 @@ C DJG stinkin' Jacobian!
 
 	success = .false.
 
-	recon%Ein = Ebeam_vertex_ave	!lowered by most probable eloss (init.f)
+c ... make vertex dependent
+c	recon%Ein = Ebeam_vertex_ave	!lowered by most probable eloss (init.f)
+
+! Reconstructed vertex used to for beam energy determination
+	if(using_E_arm_montecarlo .and. using_P_arm_montecarlo) then
+	   vert_Ein_loss = (pzreact + ezreact) / 2.
+	else if (using_E_arm_montecarlo .and. .not.using_P_arm_montecarlo)then
+	   vert_Ein_loss = ezreact
+	else if (using_P_arm_montecarlo .and. .not.using_E_arm_montecarlo)then
+	   vert_Ein_loss = pzreact
+	else
+	   stop 'Events are not set to run through either arm.'
+	endif
+
+	if(correct_Eloss) then
+	   vert_Ein_loss = min(targ%length/2.,max(-targ%length/2.,vert_Ein_loss-targ%zoffset))
+	   call trip_thru_target(1,vert_Ein_loss,ebeam,zero,Evloss_Ein,rEin,Me,4)
+	   recon%Ein = ebeam - Evloss_Ein
+	else
+	   recon%Ein = ebeam
+	endif
 
 ! ... unit vector components of outgoing e,p
 ! ... z is DOWNSTREAM, x is DOWN and y is LEFT looking downstream.
@@ -1030,7 +1054,11 @@ C Ebeam_vertex_ave has been shifted to account for Coulomb effects
 C In general, the Hall C analyzer does not correct for this
 C If you do NOT apply an energy shift in the ENGINE to account
 C for Coulomb corrections, make sure the line below is NOT commented out.
-	recon%Ein = Ebeam_vertex_ave - targ%Coulomb%ave
+C Barak Schmookler... made eloss vertex dependent, so should be commented
+C out if not correcting for shift, and sign should be changed
+
+c	recon%Ein = Ebeam_vertex_ave - targ%Coulomb%ave  (old)
+c	recon%Ein = recon%Ein + targ%Coulomb%ave
 
 	if (debug(4)) write(6,*)'comp_rec_ev: at 1'
 	recon%ue%x = sin(recon%e%theta)*cos(recon%e%phi)

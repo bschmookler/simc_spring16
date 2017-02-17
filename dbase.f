@@ -36,6 +36,7 @@
 	include 'radc.inc'
 	include 'histograms.inc'
 	include 'simulate.inc'
+	include 'g_dump_all_events.inc'
 
 	real*8 dum1,dum2,dum3,dum4,dum5,dum6,dum7
 	real*8 mrec_guess
@@ -408,7 +409,7 @@ C DJG:
 	    targ%angle = 0.0
 	    write(6,*) 'Forcing target angle to zero for cryotarget.'
 	  endif
-	  if (targ%can.ne.1 .and. targ%can.ne.2) stop 'bad targ.can value'
+	  if (targ%can.ne.1 .and. targ%can.ne.2 .and. targ%can.ne.3) stop 'bad targ.can value'
 	endif
 	if(sin(targ%angle) .gt. 0.85) then
 	  write(6,*) 'BAD targ.angle (0 is perp. to beam, +ve is rotated towards SOS)'
@@ -453,7 +454,7 @@ C DJG:
 	endif
 
 	if (abs(one_tail).gt.3 .and. using_rad)
-     >     stop 'Moron! one_tail>3 turns radiation off, but using_rad wants it on.'
+     >    stop 'Moron! one_tail>3 turns radiation off, but using_rad wants it on.'
 
 	if (.not.using_rad) then
 	  do i = 1, 3
@@ -487,6 +488,9 @@ C DJG:
 	  cuts%Em%max =  1.d6
 	endif
 
+c	write(6,*) 'Em_min = ', cuts%Em%min
+c	write(6,*) 'Em_max = ', cuts%Em%max
+
 	if (abs(deForest_flag).gt.1) stop 'Idiot! check setting of deForest_flag'
 
 	if (correct_Eloss .and. .not.using_Eloss) then
@@ -502,7 +506,8 @@ C DJG:
      >		spec%p%P, Mh2, Ebeam, spec%e%P)
 
 ! ... Read in the theory file (for A(e,e'p))
-	if (doing_deuterium .or. (doing_heavy.and.(.not.use_benhar_sf))) then
+!	if (doing_deuterium .or. (doing_heavy.and.(.not.use_benhar_sf))) then
+	if (doing_deuterium .or. doing_heavy) then
 	  call theory_init(success)
 	  if (.not.success) stop 'THEORY_INIT failed!'
 	endif
@@ -836,6 +841,7 @@ C DJG:
      >             Implmemented for beam and scattered electron only!'
 	if (.not.correct_Eloss) write(6,*) 'NOTE: Will NOT correct reconstructed data for energy loss'
 	if (.not.correct_raster) write(6,*) 'NOTE: Will NOT use raster terms in reconstruction'
+	if (dump_all_in_ntuple) write(6,*) 'NOTE: Will be dumping all generated events into Ntuple' 
 
 	return
 	end
@@ -846,6 +852,7 @@ C DJG:
 
 	implicit none
 	include 'simulate.inc'
+	include 'g_dump_all_events.inc'
 	include 'radc.inc'
 
 	integer*4 ierr
@@ -974,6 +981,8 @@ C DJG:
 	ierr = regparmint('using_tgt_field',using_tgt_field,0)
 	ierr = regparmstring('tgt_field_file',tgt_field_file,0)
 	ierr = regparmdouble('drift_to_cal',drift_to_cal,0)
+	ierr = regparmint('col_flag',col_flag,0)
+	ierr = regparmint('dump_all_in_ntuple',dump_all_in_ntuple,0)
 
 *	E_ARM_ACCEPT
 

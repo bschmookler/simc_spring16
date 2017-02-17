@@ -10,6 +10,7 @@
 	implicit none
 !	include 'simulate_init.inc'
 	include 'simulate.inc'
+	include 'g_dump_all_events.inc'
 	include 'histograms_init.inc'
 	include 'radc.inc'
 	include 'hbook.inc'
@@ -211,6 +212,14 @@ cdg	call time (timestring1(11:23))
 	  call generate(main,vertex,orig,success)
 	  if(debug(2)) write(6,*)'sim: after gen, success =',success
 
+! When dumping all events, at least require that the generation step
+! is successful...
+	  if(dump_all_in_ntuple .and. success) then
+	     dump_all_this_ev = .true.
+	  else
+	     dump_all_this_ev = .false.
+	  endif
+
 ! Run the event through various manipulations, checking to see whether
 ! it made it at each stage
 
@@ -222,15 +231,21 @@ cdg	call time (timestring1(11:23))
 
 ! ... calculate everything else about the event
 
-	  if (success) then
-	    call complete_recon_ev(recon,success)
+	  if (success .or. dump_all_this_ev) then
+	     temp_success = success 
+	     call complete_recon_ev(recon,success)
+	     if (.not.temp_success .and. success) success = temp_success
 	  endif
 
 	  if(debug(2)) write(6,*)'sim: after comp_ev, success =',success
 	  if(debug(5)) write(6,*) 'recon%Em,recon%Pm',recon%Em,recon%Pm
 ! ... calculate remaining pieces of the main structure
 
-	  if (success) call complete_main(.false.,main,vertex,vertex0,recon,success)
+	  if (success .or. dump_all_this_ev) then
+	     temp_success = success
+	     call complete_main(.false.,main,vertex,vertex0,recon,success)
+	     if (.not.temp_success .and. success) success = temp_success
+	  endif
 ! ... Apply SPedge cuts to success if hard_cuts is set.
 	    pass_cuts = .not. (
      >	      recon%e%delta .le. (SPedge%e%delta%min+slop%MC%e%delta%used) .or.
@@ -498,26 +513,33 @@ c	call time (timestring2(11:23))
 	endif
 	if (electron_arm.eq.3 .or. hadron_arm.eq.3) then
 	  write(7,*) 'HRSr Trials:          ',rSTOP_trials
-	  write(7,*) 'Slit hor/vert         ',rSTOP_slit_vert,rSTOP_slit_hor
+	  write(7,*) 'Col (Sieve) entr/exit ',rSTOP_col_entr,rSTOP_col_exit
+	  write(7,*) 'Spec. entrance        ',rSTOP_spec_entr
 	  write(7,*) 'Q1 entrance/mid/exit  ',rSTOP_Q1_in,rSTOP_Q1_mid,rSTOP_Q1_out
 	  write(7,*) 'Q2 entrance/mid/exit  ',rSTOP_Q2_in,rSTOP_Q2_mid,rSTOP_Q2_out
 	  write(7,*) 'Dipole entrance/exit  ',rSTOP_D1_in,rSTOP_D1_out
 	  write(7,*) 'Q3 entrance/mid/exit  ',rSTOP_Q3_in,rSTOP_Q3_mid,rSTOP_Q3_out
 	  write(7,*) 'Events reaching hut   ',rSTOP_hut
 	  write(7,*) 'VDC1, VDC2            ',rSTOP_dc1,rSTOP_dc2
-	  write(7,*) 'S1, S2, Cal	    ',rSTOP_s1,rSTOP_s2,rSTOP_cal
+	  write(7,*) 'S0, Cher, S2	    ',rSTOP_s0,rSTOP_cer,rSTOP_s2
+	  write(7,*) 'Calo. Ps, Calo. Sh    ',rSTOP_ps,rSTOP_sh
+	  write(7,*) 'Successes             ',rSTOP_successes
 	  write(7,*)
 	endif
 	if (electron_arm.eq.4 .or. hadron_arm.eq.4) then
-	  write(7,*) 'HRSl Trials:          ',lSTOP_trials
-	  write(7,*) 'Slit hor/vert         ',lSTOP_slit_vert,lSTOP_slit_hor
-	  write(7,*) 'Q1 entrance/mid/exit  ',lSTOP_Q1_in,lSTOP_Q1_mid,lSTOP_Q1_out
-	  write(7,*) 'Q2 entrance/mid/exit  ',lSTOP_Q2_in,lSTOP_Q2_mid,lSTOP_Q2_out
-	  write(7,*) 'Dipole entrance/exit  ',lSTOP_D1_in,lSTOP_D1_out
-	  write(7,*) 'Q3 entrance/mid/exit  ',lSTOP_Q3_in,lSTOP_Q3_mid,lSTOP_Q3_out
-	  write(7,*) 'Events reaching hut   ',lSTOP_hut
-	  write(7,*) 'VDC1, VDC2            ',lSTOP_dc1,lSTOP_dc2
-	  write(7,*) 'S1, S2, Cal	    ',lSTOP_s1,lSTOP_s2,lSTOP_cal
+	  write(7,*) 'HRSl Trials:           ',lSTOP_trials
+	  write(7,*) 'Col (Sieve) entr/exit  ',lSTOP_col_entr,lSTOP_col_exit
+	  write(7,*) 'Spec/Box entracnce     ',lSTOP_spec_entr,lSTOP_box_entr
+	  write(7,*) 'Q1 entrance/mid/exit   ',lSTOP_Q1_in,lSTOP_Q1_mid,lSTOP_Q1_out
+	  write(7,*) 'Q2 entrance/mid/exit   ',lSTOP_Q2_in,lSTOP_Q2_mid,lSTOP_Q2_out
+	  write(7,*) 'Dipole entrance/exit   ',lSTOP_D1_in,lSTOP_D1_out
+	  write(7,*) 'Q3 entrance/mid/exit   ',lSTOP_Q3_in,lSTOP_Q3_mid,lSTOP_Q3_out
+	  write(7,*) 'Events reaching hut    ',lSTOP_hut
+	  write(7,*) 'VDC1, VDC2             ',lSTOP_dc1,lSTOP_dc2
+	  write(7,*) 'S0, Cher, S2	     ',lSTOP_s0,lSTOP_cer,lSTOP_s2
+	  write(7,*) 'Calo. prl1, Calo. prl2 ',lSTOP_prl1,lSTOP_prl2
+	  write(7,*) 'Successes              ',lSTOP_successes
+	  write(7,*)
 	endif
 	if (electron_arm.eq.5 .or. hadron_arm.eq.5 .or.
      >	    electron_arm.eq.6 .or. hadron_arm.eq.6) then
@@ -1330,13 +1352,17 @@ c	enddo
 	real*8 zero
 	parameter (zero=0.0d0)	!double precision zero for subroutine calls
 
+	real*8 y_P_coff,x_P_beam,arg1_P,aa1_P,aa2_P !used when reconstructing z vertex
+	real*8 y_E_coff,x_E_beam,arg1_E,aa1_E,aa2_E !used when reconstructing z vertex
+	real*8 vert_P_loss,vert_E_loss
+
 ! Prepare the event for the Monte Carlo's and/or spectrometer cuts
 
 	success = .false.
 	ntup%resfac = 0.0			!resfac (see simulate.inc)
 	if (correct_raster) then
-	  fry = -main%target%rastery
-	  frx = -main%target%rasterx   !This should make frx positive for beam left
+	  fry = -main%target%rastery-targ%yoffset
+	  frx = -main%target%rasterx-targ%xoffset   !This should make frx positive for beam left
 	else
 	  fry = 0.0
 	  frx = 0.0
@@ -1399,7 +1425,7 @@ c	enddo
 	  delta_P_arm = main%SP%p%delta
 	  x_P_arm = -main%target%y
 	  y_P_arm = -main%target%x*spec%p%cos_th - main%target%z*spec%p%sin_th*sin(spec%p%phi)
-	  z_P_arm =  main%target%z*spec%p%cos_th + main%target%x*spec%p%sin_th*sin(spec%p%phi)
+	  z_P_arm =  main%target%z*spec%p%cos_th - main%target%x*spec%p%sin_th*sin(spec%p%phi)
 
 ! %.. Apply spectrometer offset (using spectrometer coordinate system).
 	  x_P_arm = x_P_arm - spec%p%offset%x
@@ -1452,6 +1478,7 @@ C DJG moved this to the last part of generate!!!
 !	resmult=resolution factor for DCs (see simulate.inc)
 !	vertical position at target (for reconstruction w/raster MEs).
 !	ok flag
+!       collimator setting for hrsr,hrsl - Added by Barak Schmookler Sep. 29, 2015
 
 	  m2 = Mh2
 	  pathlen = 0.0
@@ -1469,12 +1496,12 @@ C DJG moved this to the last part of generate!!!
 	    call mc_hrsr(spec%p%P, spec%p%theta, delta_P_arm, x_P_arm,
      >		y_P_arm, z_P_arm, dx_P_arm, dy_P_arm, xfp, dxfp, yfp, dyfp,
      >		m2, mc_smear, mc_smear, doing_decay,
-     >		ntup%resfac, fry, ok_P_arm, pathlen)
+     >		ntup%resfac, fry, ok_P_arm, pathlen, col_flag)
 	  else if (hadron_arm.eq.4) then
 	    call mc_hrsl(spec%p%P, spec%p%theta, delta_P_arm, x_P_arm,
      >		y_P_arm, z_P_arm, dx_P_arm, dy_P_arm, xfp, dxfp, yfp, dyfp,
      >		m2, mc_smear, mc_smear, doing_decay,
-     >		ntup%resfac, fry, ok_P_arm, pathlen)
+     >		ntup%resfac, fry, ok_P_arm, pathlen, col_flag)
 	  else if (hadron_arm.eq.5 .or. hadron_arm.eq.6) then
 	    call mc_shms(spec%p%P, spec%p%theta, delta_P_arm, x_P_arm,
      >		y_P_arm, z_P_arm, dx_P_arm, dy_P_arm, xfp, dxfp, yfp, dyfp,
@@ -1529,6 +1556,7 @@ C DJG For spectrometers to the left of the beamline, need to pass ctheta,-stheta
 	  main%RECON%p%delta = main%SP%p%delta
 	  main%RECON%p%yptar = main%SP%p%yptar
 	  main%RECON%p%xptar = main%SP%p%xptar
+!	  main%RECON%p%z = main%SP%p%z
 	endif
 
 ! Fill recon quantities.
@@ -1545,10 +1573,34 @@ C DJG For spectrometers to the left of the beamline, need to pass ctheta,-stheta
 	call physics_angles(spec%p%theta,spec%p%phi,dx_tmp,
      >           dy_tmp,recon%p%theta,recon%p%phi)
 
+! Reconstruct reaction z vertex
+! ... We assume the following is known:
+! ... spectrometer theta and phi
+! ... spectrometer y,z,y'(phi_tar) offsets
+! ... raster current for each event, and target offset
+! ... also remember +xbeam points right looking downstream
+
+	y_P_coff  = recon%p%z + spec%p%offset%y
+	y_P_coff = y_P_coff - spec%p%offset%z*(recon%p%yptar-spec%p%offset%yptar)
+
+	x_P_beam = targ%xoffset + main%target%rasterx
+	
+	arg1_P = atan(recon%p%yptar-spec%p%offset%yptar)
+
+	aa1_P = cos(arg1_P) 
+	aa1_P = aa1_P / sin(arg1_P + (sin(spec%p%phi)*spec%p%theta))
+	
+	aa2_P = cos(arg1_P + (sin(spec%p%phi)*spec%p%theta)) 
+	aa2_P = aa2_P / sin(arg1_P + (sin(spec%p%phi)*spec%p%theta))
+
+	pzreact = -(y_P_coff * aa1_P) - (x_P_beam * aa2_P)
+
 ! ... correct for energy loss - use most probable (last flag = 4)
 
 	if (correct_Eloss) then
-	  call trip_thru_target (3, zero, recon%p%E,
+	  vert_P_loss = min(targ%length/2.,max(-targ%length/2.,pzreact-targ%zoffset))
+
+	  call trip_thru_target (3, vert_P_loss, recon%p%E,
      >		recon%p%theta, eloss_P_arm, r,Mh,4)
 	  recon%p%E = recon%p%E + eloss_P_arm
 	  recon%p%E = max(recon%p%E,sqrt(Mh2+0.000001)) !can get P~0 when calculating hadron momentum-->P<0 after eloss
@@ -1563,10 +1615,15 @@ C	  recon%p%delta = (recon%p%P-spec%p%P)/spec%p%P*100.
 
 ! ... ionization loss correction (if requested) and Coulomb deceleration
 
-	if (debug(3)) write(6,*)'mc: e arm stuff0 =',
+	if (using_Eloss) then
+	   if (debug(3)) write(6,*)'mc: e arm stuff0 =',
      >		orig%e%E,main%target%Eloss(2),spec%e%P
-	main%SP%e%delta=100* (orig%e%E - main%target%Eloss(2)
+	   main%SP%e%delta=100* (orig%e%E - main%target%Eloss(2)
      >		- main%target%Coulomb - spec%e%P) / spec%e%P
+	else
+	   if (debug(3)) write(6,*)'mc: e arm stuff1 =',orig%e%delta
+	   main%SP%e%delta = orig%e%delta
+        endif
 
 ! ... multiple scattering
 
@@ -1578,7 +1635,7 @@ C	  recon%p%delta = (recon%p%P-spec%p%P)/spec%p%P*100.
 	endif
 
 	main%SP%e%yptar = orig%e%yptar + dangles(1) + dang_in(1)
-	main%SP%e%xptar = orig%e%xptar + dangles(2) + dang_in(2)*spec%p%cos_th
+	main%SP%e%xptar = orig%e%xptar + dangles(2) + dang_in(2)*spec%e%cos_th
 
 ! CASE 1: Using the spectrometer Monte Carlo
 
@@ -1593,7 +1650,7 @@ C	  recon%p%delta = (recon%p%P-spec%p%P)/spec%p%P*100.
 	  delta_E_arm = main%SP%e%delta
 	  x_E_arm = -main%target%y
 	  y_E_arm = -main%target%x*spec%e%cos_th - main%target%z*spec%e%sin_th*sin(spec%e%phi)
-	  z_E_arm =  main%target%z*spec%e%cos_th + main%target%x*spec%e%sin_th*sin(spec%e%phi)
+	  z_E_arm =  main%target%z*spec%e%cos_th - main%target%x*spec%e%sin_th*sin(spec%e%phi)
 
 ! ... Apply spectrometer offset (using spectrometer coordinate system).
 	  x_E_arm = x_E_arm - spec%e%offset%x
@@ -1635,6 +1692,7 @@ C	  recon%p%delta = (recon%p%P-spec%p%P)/spec%p%P*100.
 !	resmult=resolution factor for DCs (see simulate.inc)
 !	decay flag (hardwired to .false. for electron arm).
 !	ok flag
+!       collimator setting for hrsr,hrsl - Added by Barak Schmookler Sep. 29, 2015
 
 	  m2 = me2
 	  pathlen = 0.0
@@ -1652,12 +1710,12 @@ C	  recon%p%delta = (recon%p%P-spec%p%P)/spec%p%P*100.
 	    call mc_hrsr(spec%e%P, spec%e%theta, delta_E_arm, x_E_arm,
      >		y_E_arm, z_E_arm, dx_E_arm, dy_E_arm, xfp, dxfp, yfp, dyfp,
      >		me2, mc_smear, mc_smear, .false.,
-     >		tmpfact, fry, ok_E_arm, pathlen)
+     >		tmpfact, fry, ok_E_arm, pathlen, col_flag)
 	  else if (electron_arm.eq.4) then
 	    call mc_hrsl(spec%e%P, spec%e%theta, delta_E_arm, x_E_arm,
      >		y_E_arm, z_E_arm, dx_E_arm, dy_E_arm, xfp, dxfp, yfp, dyfp,
      >		me2, mc_smear, mc_smear, .false.,
-     >		tmpfact, fry, ok_E_arm, pathlen)
+     >		tmpfact, fry, ok_E_arm, pathlen, col_flag)
 	  else if (electron_arm.eq.5 .or. electron_arm.eq.6) then
 	    call mc_shms(spec%e%P, spec%e%theta, delta_E_arm, x_E_arm,
      >		y_E_arm, z_E_arm, dx_E_arm, dy_E_arm, xfp, dxfp, yfp, dyfp,
@@ -1723,6 +1781,7 @@ C DJG For spectrometers to the left of the beamline, need to pass ctheta,-stheta
 	  main%RECON%e%delta = main%SP%e%delta
 	  main%RECON%e%yptar = main%SP%e%yptar
 	  main%RECON%e%xptar = main%SP%e%xptar
+!	  main%RECON%e%z = main%SP%e%z
 	endif
 
 ! Fill recon quantities%
@@ -1740,11 +1799,34 @@ C DJG For spectrometers to the left of the beamline, need to pass ctheta,-stheta
 	call physics_angles(spec%e%theta,spec%e%phi,dx_tmp,
      >		dy_tmp,recon%e%theta,recon%e%phi)
 
+! Reconstruct reaction z vertex
+! ... We assume the following is known:
+! ... spectrometer theta and phi
+! ... spectrometer y,z,y'(phi_tar) offsets
+! ... raster current for each event, and target offset
+! ... also remember +xbeam points right looking downstream
+
+        y_E_coff  = recon%e%z + spec%e%offset%y
+	y_E_coff = y_E_coff - spec%e%offset%z*(recon%e%yptar-spec%e%offset%yptar)
+
+        x_E_beam = targ%xoffset + main%target%rasterx
+        
+        arg1_E = atan(recon%e%yptar-spec%e%offset%yptar)
+
+        aa1_E = cos(arg1_E) 
+        aa1_E = aa1_E / sin(arg1_E + (sin(spec%e%phi)*spec%e%theta))
+        
+        aa2_E = cos(arg1_E + (sin(spec%e%phi)*spec%e%theta)) 
+        aa2_E = aa2_E / sin(arg1_E + (sin(spec%e%phi)*spec%e%theta))
+
+        ezreact = -(y_E_coff * aa1_E) - (x_E_beam * aa2_E)
 
 ! ... correct for energy loss and correct for Coulomb deceleration
 
 	if (correct_Eloss) then
-	  call trip_thru_target (2, zero, recon%e%E, recon%e%theta,
+	  vert_E_loss = min(targ%length/2.,max(-targ%length/2.,ezreact-targ%zoffset))	  
+
+	  call trip_thru_target (2, vert_E_loss, recon%e%E, recon%e%theta,
      >                              eloss_E_arm, r, Me, 4)
 	  recon%e%E = recon%e%E + eloss_E_arm
 	endif

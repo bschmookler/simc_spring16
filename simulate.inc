@@ -46,6 +46,7 @@
 	real*8	wtcontribute, dE_edge_test, Egamma_gen_max
 	real*8  pt_b_param,sigc_kin_min,sigc_kin_max,sigc_kin_ind
 	real*8  targ_Bangle, targ_Bphi, targ_pol, drift_to_cal,sign_hadron
+	real*8 pzreact, ezreact
 	integer*4 sigc_flag,sigc_nbin
 
 	type(gen_limits)::	gen
@@ -77,13 +78,14 @@
 	logical use_benhar_sf
 	character*80 random_state_file
 	integer*4 random_seed
+	integer*4 col_flag
 
 
 	common /gnrl/   Mh, Mh2, Mh2_final, Ebeam, dEbeam, Ebeam_vertex_ave,
      >    genvol, genvol_inclusive, luminosity, targetfac,
      >    normfac, wtcontribute, dE_edge_test, Egamma_gen_max,pt_b_param,
      >    sigc_kin_min,sigc_kin_max,sigc_kin_ind,targ_Bangle, targ_Bphi, targ_pol, 
-     >    drift_to_cal,sign_hadron,sigc_flag,sigc_nbin,
+     >    drift_to_cal,sign_hadron,pzreact,ezreact,sigc_flag,sigc_nbin,
      >    gen, spec, cuts, edge, VERTEXedge, SPedge,
      >    slop, EXPER, mc_smear, debug, nevent, ntried, ngen,
      >    deForest_flag, Nntu, ncontribute, npasscuts, ncontribute_no_rad_proton, 
@@ -95,7 +97,8 @@
      >    which_pion, using_cit_generation, using_Coulomb, using_Eloss,
      >    correct_Eloss, correct_raster, do_fermi,using_tgt_field,
      >    electron_arm, hadron_arm, use_first_cer,
-     >    transparency, use_benhar_sf, random_state_file, random_seed
+     >    transparency, use_benhar_sf, random_state_file, random_seed,
+     >	  col_flag
 
 ! ........ note: make these first two parameters at least ONE BIGGER than the actual dimensions you want to read in
 	integer*4 ntheorymax,nrhoPmmax
