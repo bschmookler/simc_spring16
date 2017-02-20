@@ -37,7 +37,7 @@
 	type(sums_twoarm)::	sumerr, sumerr2, aveerr, resol
 
 	real*8 one
-	parameter (one=1.0d0)	!double precision 1 for subroutine calls
+	parameter (one=1.0e0)	!double precision 1 for subroutine calls
 
 	real*8 grnd
 	real*8 ang_targ_earm,ang_targ_parm
@@ -529,7 +529,7 @@ c	call time (timestring2(11:23))
 	if (electron_arm.eq.4 .or. hadron_arm.eq.4) then
 	  write(7,*) 'HRSl Trials:           ',lSTOP_trials
 	  write(7,*) 'Col (Sieve) entr/exit  ',lSTOP_col_entr,lSTOP_col_exit
-	  write(7,*) 'Spec/Box entracnce     ',lSTOP_spec_entr,lSTOP_box_entr
+	  write(7,*) 'Spec/Box entrance      ',lSTOP_spec_entr,lSTOP_box_entr
 	  write(7,*) 'Q1 entrance/mid/exit   ',lSTOP_Q1_in,lSTOP_Q1_mid,lSTOP_Q1_out
 	  write(7,*) 'Q2 entrance/mid/exit   ',lSTOP_Q2_in,lSTOP_Q2_mid,lSTOP_Q2_out
 	  write(7,*) 'Dipole entrance/exit   ',lSTOP_D1_in,lSTOP_D1_out
@@ -849,7 +849,7 @@ c	  write(7,*) 'BP thingie in/out     ',shmsSTOP_BP_in,shmsSTOP_BP_out
 	write(iun,'(9x,a12,'' = '',2(f15.4,2x),2x,a5)') 'yptar',
      >		central%e%yptar, central%p%yptar, 'mr'
 
-	write(iun,'(17x,a10,'' = '',f15.4,2x,a9)') 'Q2',central%Q2/1.d6,'(GeV/c)^2'
+	write(iun,'(17x,a10,'' = '',f15.4,2x,a9)') 'Q2',central%Q2/1.e6,'(GeV/c)^2'
 	write(iun,'(17x,a10,'' = '',f15.4,2x,a9)') 'q', central%q, 'MeV/c'
 	write(iun,'(17x,a10,'' = '',f15.4,2x,a9)') 'nu',
      >		central%nu, 'MeV'
@@ -939,7 +939,7 @@ c	  write(7,*) 'BP thingie in/out     ',shmsSTOP_BP_in,shmsSTOP_BP_out
 	write(iun,'(12x,''Ncontribute    = '',i10)') ncontribute
 	write(iun,'(12x,''Nco_no_rad_prot= '',i10)') ncontribute_no_rad_proton
 	write(iun,'(12x,''-> %no_rad_prot= '',f10.3)')
-     >		(100.*ncontribute_no_rad_proton/max(dble(ncontribute),0.1d0))
+     >		(100.*ncontribute_no_rad_proton/max(dble(ncontribute),0.1e0))
 	write(iun,'(/1x,''INTEGRATED WEIGHTS (number of counts in delta/Em cuts!):'')')
 	write(iun,'(1x,''              MeV: wtcontr= '',e16.8)') wtcontribute/nevent
 
@@ -1090,7 +1090,7 @@ c	  write(7,*) 'BP thingie in/out     ',shmsSTOP_BP_in,shmsSTOP_BP_out
      >		contrib%tru%p%yptar%lo*1000., contrib%tru%p%yptar%hi*1000.,'mr'
 	write(iun,9917) 'P arm  xptar', edge%p%xptar%min*1000., edge%p%xptar%max*1000.,
      >		contrib%tru%p%xptar%lo*1000., contrib%tru%p%xptar%hi*1000., 'mr'
-	write(iun,9917) 'Em', max(-999999.999d0,edge%Em%min), min(999999.999d0,edge%Em%max),
+	write(iun,9917) 'Em', max(-999999.999e0,edge%Em%min), min(999999.999e0,edge%Em%max),
      >		contrib%tru%Em%lo, contrib%tru%Em%hi, 'MeV'
 	write(iun,9917) 'Pm', 0., 0., contrib%tru%Pm%lo,
      >		contrib%tru%Pm%hi, 'MeV'
@@ -1310,7 +1310,7 @@ c	enddo
 
 	if(doing_semi) then
 	   write(6,*) 'central event'
-	   write(6,*) 'Pt',sqrt(vertex0%pt2)/1.d3
+	   write(6,*) 'Pt',sqrt(vertex0%pt2)/1.e3
 	   write(6,*) 'z', vertex0%zhad
 	   write(6,*) 'lab cross section (nb/Gev2/sr2)',central%sigcc*1000.0*1000.0*1000.0
 	endif
@@ -1350,7 +1350,7 @@ c	enddo
 	real*8 zhadron
 
 	real*8 zero
-	parameter (zero=0.0d0)	!double precision zero for subroutine calls
+	parameter (zero=0.0e0)	!double precision zero for subroutine calls
 
 	real*8 y_P_coff,x_P_beam,arg1_P,aa1_P,aa2_P !used when reconstructing z vertex
 	real*8 y_E_coff,x_E_beam,arg1_E,aa1_E,aa2_E !used when reconstructing z vertex

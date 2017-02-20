@@ -33,7 +33,7 @@
         real*8 etarcm,ptarcm,ptarcmx,ptarcmy,ptarcmz	!p_fermi in C.M.
         real*8 thetacm,phicm,phiqn,jacobian,jac_old
 
-	real*8 sig_multipole,sig_blok,sig_param04
+	real*8 sig_multipole,sig_blok,sig_param04,sig_param_3000
 
 	integer final_state
 	logical first,low_w_flag
@@ -70,7 +70,7 @@
 * complete_ev where possible.  WORSE YET, WE CHANGE UNITS OF MAIN.W,... HERE!!!
 
 	tfcos = pferx*vertex%uq%x+pfery*vertex%uq%y+pferz*vertex%uq%z
-	if(tfcos-1..gt.0..and.tfcos-1..lt.1.d-8)tfcos=1.0
+	if(tfcos-1..gt.0..and.tfcos-1..lt.1.e-8)tfcos=1.0
 	tfsin=sqrt(1.-tfcos**2)
 
 	s = (vertex%nu+efer)**2-(vertex%q+pfer*tfcos)**2-(pfer*tfsin)**2
@@ -108,11 +108,15 @@
 * IF low_w_flag is set.
 * NOTE: s, t, mtar, and Q2 must be converted to GeV first.
 
-c	ntup.sigcm1 = sig_blok(thetacm,phicm,main%t/1.d6,vertex%q2/1.d6,s/1%d6,main.epsilon,
+c	ntup.sigcm1 = sig_blok(thetacm,phicm,main%t/1.e6,vertex%q2/1.e6,s/1%e6,main.epsilon,
 c     >		targ%Mtar_struck/1000.,which_pion)
 
 CDG Change default to PARAM04 - this works better at larger Q2
-	ntup%sigcm1 = sig_param04(thetacm,phicm,main%t/1.d6,vertex%q2/1.d6,s/1.d6,main%epsilon,
+c	ntup%sigcm1 = sig_param04(thetacm,phicm,main%t/1.e6,vertex%q2/1.e6,s/1.e6,main%epsilon,
+c     >		targ%Mtar_struck/1000.,which_pion)
+
+CDG Change default to PARAM3000 - this works better at larger Q2
+	ntup%sigcm1 = sig_param_3000(thetacm,phicm,main%t/1.e6,vertex%q2/1.e6,s/1.e6,main%epsilon,
      >		targ%Mtar_struck/1000.,which_pion)
 
 	sigma_eepi = ntup%sigcm1
@@ -120,8 +124,8 @@ CDG Change default to PARAM04 - this works better at larger Q2
 * For low w, use multipole expansion as default cross section model.
 	if(low_w_flag) then
 
-	  ntup%sigcm2 = sig_multipole(k_eq,efer,qstar,tfcos,ppicm,s/1.d6,thetacm,
-     >		phicm,main%epsilon,final_state,vertex%q2/1.d6,targ%Mtar_struck/1000.,pfer,mh)
+	  ntup%sigcm2 = sig_multipole(k_eq,efer,qstar,tfcos,ppicm,s/1.e6,thetacm,
+     >		phicm,main%epsilon,final_state,vertex%q2/1.e6,targ%Mtar_struck/1000.,pfer,mh)
 	  sigma_eepi = ntup%sigcm2
 
 	endif
@@ -346,7 +350,7 @@ C				  7:-----S1+
 				!the four terms together. DJG
 
 	sig219=(sigt+eps*sigl+eps*cos(2.*phicm)*sigtt
-     >		+sqrt(2.0*eps*(1.+eps))*cos(phicm)*siglt)/1.d0
+     >		+sqrt(2.0*eps*(1.+eps))*cos(phicm)*siglt)/1.e0
 
 * DJG: sig219 is dsig/dOmega_cm - convert to dsig/dtdphi_cm
 * DJG: using dt/dcos_cm = 2*ppicm*qcm
@@ -415,7 +419,7 @@ C				  7:-----S1+
 	  sigtt=sigtt/(0.3+q2_gev)
 
 	  sig219=(sigt+eps*sigl+eps*cos(2.*phicm)*sigtt
-     >		+sqrt(2.0*eps*(1.+eps))*cos(phicm)*siglt)/1.d0
+     >		+sqrt(2.0*eps*(1.+eps))*cos(phicm)*siglt)/1.e0
 
 * GMH: Brauel scaled all his data to W=2.19 GeV, so rescale by 1/(W**2-mp**2)**2
 * HPB: factor 15.333 therefore is value of (W**2-mp**2)**2 at W=2.19
@@ -466,7 +470,7 @@ CDG For now assume sigL(pi+)=sigL(pi-)
 
 
 	  sig219=(sigt+eps*sigl+eps*cos(2.*phicm)*sigtt
-     >		+sqrt(2.0*eps*(1.+eps))*cos(phicm)*siglt)/1.d0
+     >		+sqrt(2.0*eps*(1.+eps))*cos(phicm)*siglt)/1.e0
 
 * GMH: Brauel scaled all his data to W=2.19 GeV, so rescale by 1/(W**2-mp**2)**2
 * HPB: factor 15.333 therefore is value of (W**2-mp**2)**2 at W=2.19
@@ -475,6 +479,63 @@ CDG For now assume sigL(pi+)=sigL(pi-)
 	  sig=sig/2./pi/1.d+06   !dsig/dtdphicm in microbarns/MeV**2/rad
 
 	  sig_param04 = sig
+
+	  return
+	end
+
+***********************************************************************************************
+	real*8 function sig_param_3000(thetacm,phicm,t,q2_gev,s_gev,eps,mtar_gev,which_pion)
+
+* Purpose:
+* Fit that reproduces Fpi1 (larger Q2)and Fpi2 and Brauel separated xsec data.
+* while reproducing Bebek unseparated data.
+* The Fpi1 low Q2 data isn't fit terribly well, but not so bad (mostly, sigma_l is
+* a little big).
+* Fit gives dsigma/dt/dphi_cm, which is returned as sig_param_3000 [ub/MeV^2-rad].
+
+	implicit none
+	include 'constants.inc'
+
+	real*8 sig219,sig
+	real*8 sigt,sigl,siglt,sigtt	!components of dsigma/dt
+	
+	real*8 mrho_emp
+	real*8 fpi,fpi2,q2fpi2,q2fpi,polefactor
+
+	real*8 thetacm,phicm,t,q2_gev,s_gev,eps,mtar_gev
+	integer which_pion
+
+
+
+	fpi = 1.0/(1.0+1.77*q2_gev+0.12*q2_gev**2)
+
+	q2fpi2=q2_gev*fpi**2
+
+	sigL = 19.8*abs(t)/(abs(t)+0.02)**2*q2fpi2*exp(-3.66*abs(t))
+	sigT = 5.96/q2_gev*exp(-0.013*q2_gev**2)
+
+	sigLT=(16.533/(1.0+q2_gev))*exp(-5.1437*abs(t))*sin(thetacm)
+	sigTT=(-178.06/(1.0+q2_gev))*exp(-7.1381*abs(t))*sin(thetacm)**2
+
+
+
+CDG For now assume sigL(pi+)=sigL(pi-)
+	if (which_pion.eq.1 .or. which_pion.eq.11) then	!pi-
+	   sigt =sigt *0.25*(1.0+3.0*exp(-10.0*abs(t)))
+	   sigtt=sigtt*0.25*(1.0+3.0*exp(-10.0*abs(t)))
+	endif
+
+
+	  sig219=(sigt+eps*sigl+eps*cos(2.0*phicm)*sigtt
+     >		+sqrt(2.0*eps*(1.0+eps))*cos(phicm)*siglt)/1.0d0
+
+* GMH: Brauel scaled all his data to W=2.19 GeV, so rescale by 1/(W**2-mp**2)**2
+* HPB: factor 15.333 therefore is value of (W**2-mp**2)**2 at W=2.19
+
+	  sig=sig219*8.539/(s_gev-mtar_gev**2)**2
+	  sig=sig/2.0/pi/1.0d+06   !dsig/dtdphicm in microbarns/MeV**2/rad
+
+	  sig_param_3000 = sig
 
 	  return
 	end
