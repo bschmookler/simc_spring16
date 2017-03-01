@@ -528,8 +528,9 @@ c	call time (timestring2(11:23))
 	endif
 	if (electron_arm.eq.4 .or. hadron_arm.eq.4) then
 	  write(7,*) 'HRSl Trials:           ',lSTOP_trials
-	  write(7,*) 'Col (Sieve) entr/exit  ',lSTOP_col_entr,lSTOP_col_exit
-	  write(7,*) 'Spec/Box entrance      ',lSTOP_spec_entr,lSTOP_box_entr
+	  write(7,*) 'Col (Sieve) entr/exit  ',lSTOP_ecol_entr,lSTOP_ecol_exit
+	  write(7,*) 'Spec entrance          ',lSTOP_spec_entr
+	  write(7,*) 'Box entr/exit          ',lSTOP_box_entr,lSTOP_box_exit
 	  write(7,*) 'Q1 entrance/mid/exit   ',lSTOP_Q1_in,lSTOP_Q1_mid,lSTOP_Q1_out
 	  write(7,*) 'Q2 entrance/mid/exit   ',lSTOP_Q2_in,lSTOP_Q2_mid,lSTOP_Q2_out
 	  write(7,*) 'Dipole entrance/exit   ',lSTOP_D1_in,lSTOP_D1_out

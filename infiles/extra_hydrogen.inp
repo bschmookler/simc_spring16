@@ -56,7 +56,7 @@ begin parm simulate
   dE_edge_test = 0.	;  (move around energy edges)
   use_offshell_rad = 1	;  (ONE = TRUE)
   Egamma_gen_max = 0.	;  Set >0 to hardwire the Egamma limits.
-  col_flag = 4	   	;  collimator option: 0=Wide Open, 1=Collimator, 2=Sieve, 3=Ext Sieve, 4=GMP Sieve
+  col_flag = 1	   	;  collimator option: 0=Wide Open, 1=Collimator, 2=Sieve, 3=Ext Sieve, 4=GMP Sieve
   random_state_file = 'infiles/rand.dat' ; Random state (other way: random_seed=(4357 default) )
   dump_all_in_ntuple = 0     ;  (ONE = TRUE) Dump all generated events in Ntuple
 end parm simulate
