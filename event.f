@@ -1510,7 +1510,7 @@ C If using Coulomb cirrections, include focusing factor
 	real*8 theta0,phi0	!central physics angles of spectrometer.
 	real*8 theta,phi	!physics angles for event.
 	real*8 r,sinth,costh,sinph,cosph	!intermediate variables.
-	real*8 tmp
+	real*8 tmp, numerator
 
 	include 'constants.inc'
 
@@ -1528,12 +1528,25 @@ C If using Coulomb cirrections, include focusing factor
 	tmp=(costh - dy*sinth*sinph) / r
 	if (abs(tmp).gt.1) write(6,*) 'tmp=',tmp
 	theta = acos( (costh - dy*sinth*sinph) / r )
+	
+	!Handles events that cross over beam axis
+	!Barak and Rey, March 2017
 	if (dx.ne.0.0) then
-	  phi = atan( (dy*costh + sinth*sinph) / dx )	!gives -90 to 90 deg.
-	  if (phi.le.0) phi=phi+pi			!make 0 to 180 deg.
-	  if (sinph.lt.0.) phi=phi+pi		!add pi to phi for HMS
+	   numerator = (dy*costh + sinth*sinph)
+	   phi = atan( numerator / dx )                 !gives -90 to 90 deg.
+
+	   if(dx.gt.0.0) then
+	      if(numerator<0.0) phi = phi + twopi
+	   elseif(dx.lt.0.0) then
+	      phi = phi + pi
+	   endif
+   
+	  !phi = atan( (dy*costh + sinth*sinph) / dx )	!gives -90 to 90 deg.
+	  !if (phi.le.0) phi=phi+pi			!make 0 to 180 deg.
+	  !if (sinph.lt.0.) phi=phi+pi		!add pi to phi for HMS
+	
 	else
-	  phi = phi0
+	   phi = phi0
 	endif
 
 	return

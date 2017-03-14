@@ -374,7 +374,7 @@ C Read in transport coefficients.
 ! Note that the collimator box is always left in the open
 ! position because of use of external sieve. The colimator box
 ! entrance aperture was checked on 02/28/17 and found to be a
-! rectangle inscribed in a circle. The entrance is at 10.49cm
+! rectangle inscribed in a circle. The entrance is at 106.49cm
 ! and the aperture is 1" thick. So, we'll do the check at the back
 ! of the aperture.
 	zdrift = 109.03 - ztmp
