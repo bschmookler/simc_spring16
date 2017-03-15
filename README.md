@@ -55,3 +55,5 @@ Changes by the GMp Group
 
 See the [GMp SIMC page](https://hallaweb.jlab.org/wiki/index.php/Simulation_using_SIMC)
 
+See [here](http://hallaweb.jlab.org/12GeV/experiment/E12-07-108/Publications/Technical/Spectrometer/simc_extra.pdf) for some additional info.
+
