@@ -1036,7 +1036,7 @@ c	recon%Ein = Ebeam_vertex_ave	!lowered by most probable eloss (init.f)
 	else if (using_P_arm_montecarlo .and. .not.using_E_arm_montecarlo)then
 	   vert_Ein_loss = pzreact
 	else
-	   stop 'Events are not set to run through either arm.'
+	   vert_Ein_loss = 0.0
 	endif
 
 	if(correct_Eloss) then
