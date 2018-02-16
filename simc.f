@@ -1330,6 +1330,7 @@ c	enddo
 
 	real*8 x_E_arm,y_E_arm,z_E_arm,dx_E_arm,dy_E_arm,delta_E_arm
 	real*8 x_P_arm,y_P_arm,z_P_arm,dx_P_arm,dy_P_arm,delta_P_arm
+	real*8 x_E_init,x_P_init
 	real*8 xfp, yfp, dxfp, dyfp
 	real*8 eloss_E_arm, eloss_P_arm, r, beta, dangles(2), dang_in(2)
 	logical success
@@ -1464,6 +1465,10 @@ C DJG moved this to the last part of generate!!!
 
 	  main%SP%p%z=y_P_arm
 
+! For now, we set the initial x_tar as we do in the single arm version
+! We only use this variable in the HRS models.
+          x_P_init = x_P_arm
+
 ! ... Monte Carlo through the P arm! if we succeed, continue ...
 ! ... Here's what's passed:
 !	spectrometer central momentum
@@ -1497,12 +1502,12 @@ C DJG moved this to the last part of generate!!!
 	    call mc_hrsr(spec%p%P, spec%p%theta, delta_P_arm, x_P_arm,
      >		y_P_arm, z_P_arm, dx_P_arm, dy_P_arm, xfp, dxfp, yfp, dyfp,
      >		m2, mc_smear, mc_smear, doing_decay,
-     >		ntup%resfac, fry, ok_P_arm, pathlen, col_flag)
+     >		ntup%resfac, x_P_init, ok_P_arm, pathlen, col_flag)
 	  else if (hadron_arm.eq.4) then
 	    call mc_hrsl(spec%p%P, spec%p%theta, delta_P_arm, x_P_arm,
      >		y_P_arm, z_P_arm, dx_P_arm, dy_P_arm, xfp, dxfp, yfp, dyfp,
      >		m2, mc_smear, mc_smear, doing_decay,
-     >		ntup%resfac, fry, ok_P_arm, pathlen, col_flag)
+     >		ntup%resfac, x_P_init, ok_P_arm, pathlen, col_flag)
 	  else if (hadron_arm.eq.5 .or. hadron_arm.eq.6) then
 	    call mc_shms(spec%p%P, spec%p%theta, delta_P_arm, x_P_arm,
      >		y_P_arm, z_P_arm, dx_P_arm, dy_P_arm, xfp, dxfp, yfp, dyfp,
@@ -1679,6 +1684,10 @@ C	  recon%p%delta = (recon%p%P-spec%p%P)/spec%p%P*100.
 
 	  main%SP%e%z=y_E_arm
 
+! For now, we set the initial x_tar as we do in the single arm version
+! We only use this variable in the HRS models.
+          x_E_init = x_E_arm
+
 ! ... Monte Carlo through the E arm! if we succeed, continue ...
 ! ... Here's what's passed:
 !	spectrometer central momentum
@@ -1711,12 +1720,12 @@ C	  recon%p%delta = (recon%p%P-spec%p%P)/spec%p%P*100.
 	    call mc_hrsr(spec%e%P, spec%e%theta, delta_E_arm, x_E_arm,
      >		y_E_arm, z_E_arm, dx_E_arm, dy_E_arm, xfp, dxfp, yfp, dyfp,
      >		me2, mc_smear, mc_smear, .false.,
-     >		tmpfact, fry, ok_E_arm, pathlen, col_flag)
+     >		tmpfact, x_E_init, ok_E_arm, pathlen, col_flag)
 	  else if (electron_arm.eq.4) then
 	    call mc_hrsl(spec%e%P, spec%e%theta, delta_E_arm, x_E_arm,
      >		y_E_arm, z_E_arm, dx_E_arm, dy_E_arm, xfp, dxfp, yfp, dyfp,
      >		me2, mc_smear, mc_smear, .false.,
-     >		tmpfact, fry, ok_E_arm, pathlen, col_flag)
+     >		tmpfact, x_E_init, ok_E_arm, pathlen, col_flag)
 	  else if (electron_arm.eq.5 .or. electron_arm.eq.6) then
 	    call mc_shms(spec%e%P, spec%e%theta, delta_E_arm, x_E_arm,
      >		y_E_arm, z_E_arm, dx_E_arm, dy_E_arm, xfp, dxfp, yfp, dyfp,
